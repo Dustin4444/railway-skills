@@ -64,16 +64,14 @@ Codex environments that load this repository's plugin marketplace:
 - Plugin manifest: [`plugins/railway/.codex-plugin/plugin.json`](plugins/railway/.codex-plugin/plugin.json)
 - Marketplace: [`.agents/plugins/marketplace.json`](.agents/plugins/marketplace.json)
 
-OpenAI's public Codex guidance says plugins are managed from the Codex
-**Plugins** surface. There is not currently an official public Codex listing
-for Railway; when Railway is available in your Codex plugin library through
-this repository's marketplace, install it there:
+There is not currently an official public Codex listing for Railway. Add this
+GitHub repository as a Codex marketplace:
 
 1. Open Codex.
-2. Select **Plugins** in the top-left corner.
-3. Browse the plugin library.
-4. Search for Railway.
-5. Install the Railway plugin.
+2. Select **Plugins** in the sidebar.
+3. Open the **More** dropdown.
+4. Click **Add more**.
+5. Enter [`railwayapp/railway-skills`](https://github.com/railwayapp/railway-skills) as the marketplace source.
 
 ### Grok Build
 
