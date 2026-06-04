@@ -131,20 +131,6 @@ This repo ships one installable skill:
 
 `use-railway` is route-first. Intent routing is defined in `SKILL.md`, and execution details are split into action-oriented references.
 
-## Workflow coverage
-
-`use-railway` covers:
-
-- Project and service setup
-- Deploy and release operations
-- Troubleshooting and recovery
-- Environment config and variables
-- Networking and domains
-- Status and observability
-- Railway Agent, MCP, and skills setup
-- Projects and workspaces
-- Docs and community search
-
 ## License
 
 MIT
