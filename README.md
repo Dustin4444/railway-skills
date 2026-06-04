@@ -84,26 +84,14 @@ grok plugin marketplace add railwayapp/railway-skills
 
 ### Cursor
 
-There is not currently an official public Cursor listing for Railway. When
-Railway is distributed to your Cursor marketplace, install it from Cursor:
+There is not currently an official public Cursor listing for Railway. Add this
+GitHub repository from Cursor settings:
 
-1. Open the marketplace panel in Cursor.
-2. Search for Railway.
-3. Install the Railway plugin.
-
-Teams and Enterprise admins can distribute Railway from this GitHub repository
-as a team marketplace:
-
-1. Open **Dashboard**.
-2. Go to **Settings**.
-3. Open **Plugins**.
-4. In **Team Marketplaces**, click **Import**.
-5. Paste the GitHub repository URL for this repository.
-6. Review the parsed `railway` plugin.
-7. Optional: Set Team Access groups.
-8. Name and save the marketplace.
-9. Install the plugin from Cursor's marketplace panel, or mark it as required
-   for the appropriate distribution group.
+1. Open **Settings**.
+2. Select **Plugins**.
+3. Paste `https://github.com/railwayapp/railway-skills` in the **Search or Paste Link** input.
+4. Click the Railway plugin.
+5. Click **Add to Cursor**.
 
 - Plugin manifest: [`plugins/railway/.cursor-plugin/plugin.json`](plugins/railway/.cursor-plugin/plugin.json)
 - Marketplace: [`.cursor-plugin/marketplace.json`](.cursor-plugin/marketplace.json)
