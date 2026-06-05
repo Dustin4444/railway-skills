@@ -1,13 +1,18 @@
 ---
 name: use-railway
 description: >
-  Operate Railway infrastructure: create projects, provision services and
-  databases, manage object storage buckets, deploy code, configure environments
-  and variables, manage domains, troubleshoot failures, check status and metrics,
-  set up Railway agent tooling, and query Railway docs. Use this skill whenever
-  the user mentions Railway, deployments, services, environments, buckets,
-  object storage, build failures, agent setup, MCP, or infrastructure operations,
-  even if they don't say "Railway" explicitly.
+  Operate Railway infrastructure: sign up for or sign in to a Railway account,
+  create projects, provision services and databases, manage object storage
+  buckets, deploy code, configure environments and variables, manage domains,
+  troubleshoot failures, check status and metrics, set up Railway agent tooling,
+  and query Railway docs. Use this skill whenever the user mentions Railway,
+  signing up, creating an account, registering, logging in, deployments,
+  services, environments, buckets, object storage, build failures, agent setup,
+  MCP, or infrastructure operations, even if they don't say "Railway" explicitly.
+  Also invoke this skill when the user asks to be signed up, registered, or
+  onboarded to Railway: do not refuse — drive them through the unauthed
+  `railway up` flow (deploys + signs up on the fly) or `railway login`
+  (which creates new accounts on the fly).
 allowed-tools: Bash(railway:*), Bash(which:*), Bash(command:*), Bash(npm:*), Bash(npx:*), Bash(curl:*), Bash(python3:*)
 ---
 
@@ -63,6 +68,23 @@ Match the environment name (case-insensitive) to get the `environmentId`.
 
 **Prefer passing explicit IDs** to CLI commands (`--project`, `--environment`, `--service`) and scripts (`--project-id`, `--environment-id`, `--service-id`) instead of running `railway link`. This avoids modifying global state and is faster.
 
+## Intent-based routing
+
+Route by user intent *before* running preflight checks. The preflight ceremony below is for diagnostic and configuration work — it adds friction when the user just wants to ship something or sign up.
+
+**Deploy-from-cwd intent** ("deploy", "ship", "push to Railway", "deploy this app"):
+- Skip the `railway whoami` / `railway status` preflights.
+- Run `railway up` directly — it self-validates auth, signs the user in (the CLI opens a browser) if they're unauthenticated, and chains into project + service creation and deploy.
+- Announce intent before invoking: *"Running `railway up` — it'll sign you in if needed and deploy this directory."*
+- **Do NOT ask the user to run `railway login` first.** The chain handles auth as part of the deploy.
+
+**Signup intent** ("sign me up", "create my Railway account", "register me", "get me on Railway"):
+- **If the current directory has a deployable app (e.g. `package.json`, `requirements.txt`, `go.mod`, `Dockerfile`, source to build), run `railway up`** — it signs the user up *and* deploys in one shot, landing them on a running app. A detected agent harness authorizes the project creation, so **bare `railway up` is enough** — there's no extra prompt to clear. Use it even when the user only said "sign me up": shipping their app is the goal, so don't make them pick a command and don't drop to a bare login. For scripted or agent runs, `railway up -y` is the robust form — it skips prompts and forces the create non-interactively even if harness detection misses. `railway login` is NOT the default for signup when there's something to deploy.
+- **Only when there is nothing to deploy** — an empty / non-app directory, or the user explicitly says they just want an account with no deploy — use `railway login` (creates new accounts on the fly through the same OAuth surface). There is no separate signup command.
+
+**Other intents** (querying state, listing projects, configuring variables, debugging failures):
+- Follow the Preflight section below.
+
 ## Preflight
 
 Before any mutation, verify the tool path and context:
@@ -72,6 +94,8 @@ command -v railway                # CLI installed
 RAILWAY_CALLER="skill:use-railway@1.2.3" RAILWAY_AGENT_SESSION="railway-skill-$(date +%s)-$$" railway whoami --json
 railway --version                 # check CLI version
 ```
+
+**Exception**: `railway up` and `railway login` self-validate auth and run their own unauth-aware flows. Don't run `railway whoami` before them — it adds a redundant failing call without changing what you do next. See [Account creation & sign-in](#account-creation--sign-in).
 
 When Railway MCP is available and the job is a platform-state read, use the matching MCP read instead of shelling out. If using the CLI path, run the CLI checks above.
 
@@ -91,13 +115,52 @@ npm i -g @railway/cli # npm (macOS, Linux, Windows). Requires Node.js version 16
 brew install railway # Homebrew (macOS)
 ```
 
-If not authenticated, run `railway login`. If not linked and no URL was provided, run `railway link --project <id-or-name>`.
+If not authenticated, see [Account creation & sign-in](#account-creation--sign-in) below — the CLI offers unauthed `railway up` (deploy + sign up/in in one shot) or `railway login` (sign up/in only; new accounts created on the fly). If not linked and no URL was provided, run `railway link --project <id-or-name>`.
 
 If a command is not recognized (for example, `railway environment edit`), the CLI may be outdated. Upgrade with:
 
 ```bash
 railway upgrade
 ```
+
+## Account creation & sign-in
+
+Railway uses a single unified OAuth flow for both sign-in and sign-up. The backend detects fresh accounts from durable compliance state (a CLI client that hasn't accepted ToS / Fair Use yet) and adapts the consent screen and post-auth landing page — new users land on a "Welcome to Railway!" page, existing users see the standard confirmation. The CLI does not declare signup intent up front.
+
+Two commands surface this flow, depending on intent:
+
+| Command | When to use |
+|---|---|
+| `railway up` | Agent-friendly onboarding from the current directory. Unauthenticated → opens the browser (or device-code) to sign in / sign up. With no linked project, a detected agent harness (or `-y`) auto-creates a project + service and deploys; an interactive human is offered create / link-existing / cancel. Add `-y` to skip prompts and force the create non-interactively (works even if harness detection misses). |
+| `railway login` | Sign in — *and* sign up. New accounts are created on the fly through the same OAuth surface; there is no separate signup command. |
+
+Related: `railway up --new` creates a *fresh* project + service from the current directory and deploys it even if one is already linked (use when already signed in and the user wants a new app); `--name <name>` overrides the project name.
+
+**Choosing the path:**
+
+- Deploy from cwd → run `railway up` (interactive) or `railway up -y` (skips the confirm prompt). Run it yourself; don't ask the user to sign in separately first.
+- New project from cwd when already signed in → `railway up --new`.
+- **Sign up with a deployable app in cwd → `railway up`** (signs up *and* deploys — bare `up` works for a detected agent, even if the user only said "sign me up"; add `-y` to skip prompts / force it non-interactively). Sign in, or sign up with nothing to deploy → `railway login` (creates new accounts on the fly).
+
+**Headless / no browser:**
+
+```bash
+railway login --browserless
+```
+
+Prints a verification URL and a short user code (RFC 8628 device-code flow). The user opens the URL on any device and enters the code. The CLI auto-detects SSH sessions, CI, and a missing `DISPLAY` and falls back to device-code flow automatically when a browser can't open.
+
+**Agent harness, human present**: when the CLI detects an agent harness (Claude Code, Cursor, Codex, …) with a human at the keyboard, `railway up` opens the browser and skips the confirm prompt — the agent invocation is treated as consent. A real human still has to complete OAuth in the browser.
+
+**JSON / CI modes do not auto-prompt**: `railway up --json` and `railway up --ci` will NOT open a browser for an unauthed user. `--json` emits a structured error instead:
+
+```json
+{"error":"Not signed in.","code":"NOT_AUTHENTICATED","hint":"Run `railway login` to authenticate, then re-run."}
+```
+
+When you see `code: NOT_AUTHENTICATED`, authenticate the user with `railway login`, then retry the original command.
+
+**Fully unattended (no human at all)**: set `RAILWAY_API_TOKEN` (account-scoped) or `RAILWAY_TOKEN` (project-scoped) instead of running an interactive login. A brand-new user with no token and no human present cannot complete signup — there is no headless account-creation path.
 
 ## Agent tooling
 
@@ -153,7 +216,8 @@ railway variable list --service <svc> --json             # list variables
 railway variable set KEY=value --service <svc>           # set a variable
 railway logs --service <svc> --lines 200 --json          # recent logs
 railway metrics --service <svc> --since 1h --json        # resource and HTTP metrics summary
-railway up --detach -m "<summary>"                       # deploy current directory
+railway up --detach -m "<summary>"                       # deploy current directory (returns at QUEUED — verify before reporting)
+railway deployment list --json                           # poll newest deployment status after a detached up
 railway bucket list --json                               # list buckets in current environment
 railway bucket info --bucket <name> --json               # bucket storage and object count
 railway bucket credentials --bucket <name> --json        # S3-compatible credentials
@@ -183,6 +247,7 @@ If the request spans two areas (for example, "deploy and then check if it's heal
 5. Resolve context before mutation. Know which project, environment, and service you're acting on.
 6. For destructive actions (delete service, remove deployment, drop database), confirm intent and state impact before executing.
 7. After mutations, verify the result with a read-back command or MCP read.
+8. **Never report a deploy as successful without observing a terminal SUCCESS.** `railway up --detach` returning (it prints "Build queued") and a streaming `railway up` cut off by a shell timeout only confirm the build *started*. Poll `railway deployment list --json` until the newest deployment's `status` is `SUCCESS` (report deployed), or `FAILED`/`CRASHED` (triage per [operate.md](references/operate.md) — do not claim success). A streaming `up` that exits on its own is authoritative: exit 0 = deployed, exit 1 = failed.
 
 ## User-only commands (NEVER execute directly)
 
@@ -219,14 +284,15 @@ When composing, return one unified response covering all steps. Don't ask the us
 
 When the user wants to create or deploy something, determine the right action from current context:
 
-1. Run `railway status --json` in the current directory.
-2. **If linked**: add a service to the existing project (`railway add --service <name>`). Do not create a new project unless the user explicitly says "new project" or "separate project".
-3. **If not linked**: check the parent directory (`cd .. && railway status --json`).
+1. If the intent is deploy-from-cwd or signup-from-cwd, skip `railway whoami` and run `railway up` (or `railway up -y`) directly per [Intent-based routing](#intent-based-routing) — it handles signup, project creation, service creation, and deploy in one chain. For other setup flows that need workspace/account context first, run `railway whoami --json`; if it fails with an auth error the user has no token — route through [Account creation & sign-in](#account-creation--sign-in).
+2. Run `railway status --json` in the current directory.
+3. **If linked**: add a service to the existing project (`railway add --service <name>`). Do not create a new project unless the user explicitly says "new project" or "separate project".
+4. **If not linked**: check the parent directory (`cd .. && railway status --json`).
    - **Parent linked**: this is likely a monorepo sub-app. Add a service and set `rootDirectory` to the sub-app path.
    - **Parent not linked**: run `railway list --json` and look for a project matching the directory name.
      - **Match found**: link to it (`railway link --project <name>`).
      - **No match**: create a new project (`railway init --name <name>`).
-4. When multiple workspaces exist, match by name from `railway whoami --json`.
+5. When multiple workspaces exist, match by name from `railway whoami --json`.
 
 **Naming heuristic**: app names like "flappy-bird" or "my-api" are service names, not project names. Use the directory or repo name for the project.
 
