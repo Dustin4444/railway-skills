@@ -1,5 +1,5 @@
 {
-  "name": "railway-skills",
+  "name": "railway-plugin",
   "interface": {
     "displayName": "Railway Plugin"
   },
