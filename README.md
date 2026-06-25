@@ -10,7 +10,7 @@ This repository also includes Railway plugin packaging for Claude Code, OpenAI C
 To configure Railway agent support through the Railway CLI, run:
 
 ```bash
-railway setup agent -y
+curl -fsSL agents.railway.com | sh
 ```
 
 This installs Railway skills, configures the Railway MCP server where
