@@ -8,7 +8,7 @@ The shared plugin payload lives in `plugins/railway`.
 
 - Claude Code: `plugins/railway/.claude-plugin/plugin.json`, `plugins/railway/.mcp.json`, and the repo marketplace at `.claude-plugin/marketplace.json`.
 - OpenAI Codex: `plugins/railway/.codex-plugin/plugin.json`, `plugins/railway/.mcp.json`, and the repo marketplace at `.agents/plugins/marketplace.json`.
-- Grok Build / xAI marketplace: resolves `plugins/railway` as the plugin by using a remote source subpath (`source.path: "plugins/railway"`). The shared payload therefore exposes `plugins/railway/.grok-plugin/plugin.json`, `plugins/railway/skills`, `plugins/railway/hooks`, and `plugins/railway/.mcp.json` directly.
+- Grok Build / xAI marketplace: resolves `plugins/railway` as the plugin by using a remote source subpath (`source.path: "plugins/railway"`). The shared payload therefore exposes `plugins/railway/.grok-plugin/plugin.json`, `plugins/railway/.grok-plugin/mcp.json`, `plugins/railway/skills`, and `plugins/railway/hooks` directly.
 - Cursor: `plugins/railway/.cursor-plugin/plugin.json`, `plugins/railway/.cursor-plugin/mcp.json`, and the repo marketplace at `.cursor-plugin/marketplace.json`.
 
 Claude Code and Grok Build also use `plugins/railway/hooks/hooks.json` for the existing Railway CLI/API auto-approval hook. The hook command resolves `${GROK_PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/hooks/auto-approve-api.sh`.
@@ -46,8 +46,8 @@ References:
 
 Choose the Railway operation path that matches the job.
 
-- Remote MCP (`https://mcp.railway.com`): account/project/service discovery, deployment status, bounded logs, simple redeploys, simple project creation, and complex workflows through `railway-agent`. Remote MCP uses Railway OAuth and does not depend on local CLI state.
-- Local CLI MCP (`railway mcp`): CLI-backed platform operations such as variables, domains, service config, templates, metrics, HTTP summaries, buckets, volumes, docs, or deploy-from-directory.
+- Remote MCP (`https://mcp.railway.com`): default plugin MCP path for account/project/service discovery, deployment status, bounded logs, simple redeploys, simple project creation, and complex workflows through `railway-agent`. Remote MCP uses Railway OAuth and does not depend on local CLI state.
+- Local CLI MCP (`railway mcp`): optional user-installed MCP path for CLI-backed platform operations such as variables, domains, service config, templates, metrics, HTTP summaries, buckets, volumes, docs, or deploy-from-directory.
 - Railway CLI (`railway`): local-machine workflows such as current-directory deploys, `railway up`, `railway run`, SSH, database analysis scripts, local linking, interactive setup, and exact command output.
 - GraphQL: operations that neither MCP nor CLI exposes.
 
@@ -61,11 +61,12 @@ Use Railway CLI for context-aware local operations.
 
 ### MCP
 
-Railway CLI exposes a local MCP server with `railway mcp`.
+Published plugin MCP configs use Railway's hosted MCP server for single-click setup.
 
-- Keep `plugins/railway/.mcp.json` and `plugins/railway/.cursor-plugin/mcp.json` in sync.
-- The local MCP config must run `railway mcp`.
-- Do not store credentials in plugin MCP config. Railway CLI authentication comes from the user's local Railway login.
+- Keep `plugins/railway/.mcp.json`, `plugins/railway/.cursor-plugin/mcp.json`, and `plugins/railway/.grok-plugin/mcp.json` in sync.
+- Plugin MCP configs must point at `https://mcp.railway.com` with HTTP transport.
+- Do not store credentials in plugin MCP config. Remote MCP authentication uses Railway OAuth.
+- Railway CLI still exposes `railway mcp` for users who explicitly install a local CLI-backed MCP server, but published plugin configs should not launch it.
 
 ### GraphQL API
 

@@ -35,11 +35,11 @@ Most CLI commands operate on the linked project/environment/service context. Use
 
 Railway has three agent-facing operation paths. Choose the path that matches the job:
 
-- **Remote MCP** (`https://mcp.railway.com`): account/project/service discovery, deployment state, bounded logs, simple redeploys, simple project creation, or complex Railway workflows that can be handed to `railway-agent`. Remote MCP uses Railway OAuth and does not depend on local CLI state.
-- **Local CLI MCP** (`railway mcp`): CLI-backed platform operations such as variables, domains, service config, templates, metrics, HTTP summaries, buckets, volumes, docs, or deploy-from-directory.
+- **Remote MCP** (`https://mcp.railway.com`): default plugin MCP path for account/project/service discovery, deployment state, bounded logs, simple redeploys, simple project creation, or complex Railway workflows that can be handed to `railway-agent`. Remote MCP uses Railway OAuth and does not depend on local CLI state.
+- **Local CLI MCP** (`railway mcp`): optional user-installed MCP path for CLI-backed platform operations such as variables, domains, service config, templates, metrics, HTTP summaries, buckets, volumes, docs, or deploy-from-directory.
 - **Railway CLI** (`railway`): workflows that depend on local machine state such as current working directory deploys, `railway up`, `railway run`, SSH, database analysis scripts, local linking, interactive setup, or exact command output.
 
-If multiple paths are available, choose the one that preserves the needed context. Remote MCP fits OAuth-scoped platform operations that do not need local files or CLI state. Local CLI MCP or the CLI fit workflows that need the current repo, local credentials, SSH, database scripts, or commands not exposed by remote MCP.
+If multiple paths are available, choose the one that preserves the needed context. Remote MCP fits OAuth-scoped platform operations that do not need local files or CLI state. The CLI fits workflows that need the current repo, local credentials, SSH, database scripts, or commands not exposed by remote MCP. Use Local CLI MCP only when the current agent has it explicitly configured.
 
 Use `scripts/railway-api.sh` only when neither MCP nor CLI exposes the operation, or when a reference gives a specific GraphQL fallback.
 
@@ -96,7 +96,7 @@ Before any mutation, verify the tool path and context:
 
 ```bash
 command -v railway                # CLI installed
-RAILWAY_CALLER="skill:use-railway@1.3.3" RAILWAY_AGENT_SESSION="railway-skill-$(date +%s)-$$" railway whoami --json
+RAILWAY_CALLER="skill:use-railway@1.3.4" RAILWAY_AGENT_SESSION="railway-skill-$(date +%s)-$$" railway whoami --json
 railway --version                 # check CLI version
 ```
 
@@ -120,7 +120,7 @@ Check once per session and don't re-run it after acting; the restart prompt to t
 
 When Railway MCP is available and the job is a platform-state read, use the matching MCP read instead of shelling out. If using the CLI path, run the CLI checks above.
 
-For Railway CLI calls made while this skill is active, prefix the command with `RAILWAY_CALLER=skill:use-railway@1.3.3` and a stable `RAILWAY_AGENT_SESSION` reused for the current user request. Generate the session id once per user request, then reuse that exact value for later Railway CLI calls in the same workflow. Do not run a separate `export` preflight solely for telemetry; inline env prefixes keep the shell output concise and avoid leaking setup steps into every response.
+For Railway CLI calls made while this skill is active, prefix the command with `RAILWAY_CALLER=skill:use-railway@1.3.4` and a stable `RAILWAY_AGENT_SESSION` reused for the current user request. Generate the session id once per user request, then reuse that exact value for later Railway CLI calls in the same workflow. Do not run a separate `export` preflight solely for telemetry; inline env prefixes keep the shell output concise and avoid leaking setup steps into every response.
 
 **Context resolution - URL IDs always win:**
 - If the user provides a Railway URL, extract IDs from it. Do NOT run `railway status --json`; it returns the locally linked project, which is usually unrelated.
@@ -221,8 +221,8 @@ railway setup agent --remote
 Install or update MCP and skills directly when the user names a target tool:
 
 ```bash
-railway mcp install
-railway mcp install --agent codex
+railway mcp install --remote
+railway mcp install --agent codex --remote
 railway mcp install --agent cursor --remote
 railway skills
 railway skills update --agent codex

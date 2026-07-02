@@ -1,7 +1,7 @@
 {
   "name": "railway",
-  "version": "1.3.3",
-  "description": "Deploy, configure, monitor, and troubleshoot apps and infrastructure on Railway from Codex using the Railway CLI and local MCP server.",
+  "version": "1.3.4",
+  "description": "Deploy, configure, monitor, and troubleshoot apps and infrastructure on Railway from Codex using Railway skills and the hosted MCP server.",
   "author": {
     "name": "Railway",
     "email": "gtm@railway.com",
@@ -24,7 +24,7 @@
   "interface": {
     "displayName": "Railway",
     "shortDescription": "Deploy, configure, monitor, and troubleshoot Railway apps.",
-    "longDescription": "Use Railway from Codex through the local Railway CLI MCP server and curated Railway skills. Deploy apps, manage services and environments, configure variables and domains, provision databases and object storage, inspect logs and metrics, and troubleshoot failed builds or deployments.",
+    "longDescription": "Use Railway from Codex through the hosted Railway MCP server and curated Railway skills. Deploy apps, manage services and environments, configure variables and domains, provision databases and object storage, inspect logs and metrics, and troubleshoot failed builds or deployments.",
     "developerName": "Railway",
     "category": "Developer Tools",
     "capabilities": [
