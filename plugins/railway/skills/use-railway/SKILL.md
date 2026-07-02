@@ -96,7 +96,7 @@ Before any mutation, verify the tool path and context:
 
 ```bash
 command -v railway                # CLI installed
-RAILWAY_CALLER="skill:use-railway@1.3.0" RAILWAY_AGENT_SESSION="railway-skill-$(date +%s)-$$" railway whoami --json
+RAILWAY_CALLER="skill:use-railway@1.3.3" RAILWAY_AGENT_SESSION="railway-skill-$(date +%s)-$$" railway whoami --json
 railway --version                 # check CLI version
 ```
 
@@ -120,7 +120,7 @@ Check once per session and don't re-run it after acting; the restart prompt to t
 
 When Railway MCP is available and the job is a platform-state read, use the matching MCP read instead of shelling out. If using the CLI path, run the CLI checks above.
 
-For Railway CLI calls made while this skill is active, prefix the command with `RAILWAY_CALLER=skill:use-railway@1.3.0` and a stable `RAILWAY_AGENT_SESSION` reused for the current user request. Generate the session id once per user request, then reuse that exact value for later Railway CLI calls in the same workflow. Do not run a separate `export` preflight solely for telemetry; inline env prefixes keep the shell output concise and avoid leaking setup steps into every response.
+For Railway CLI calls made while this skill is active, prefix the command with `RAILWAY_CALLER=skill:use-railway@1.3.3` and a stable `RAILWAY_AGENT_SESSION` reused for the current user request. Generate the session id once per user request, then reuse that exact value for later Railway CLI calls in the same workflow. Do not run a separate `export` preflight solely for telemetry; inline env prefixes keep the shell output concise and avoid leaking setup steps into every response.
 
 **Context resolution - URL IDs always win:**
 - If the user provides a Railway URL, extract IDs from it. Do NOT run `railway status --json`; it returns the locally linked project, which is usually unrelated.
@@ -130,6 +130,7 @@ For Railway CLI calls made while this skill is active, prefix the command with `
 If the CLI is missing, guide the user to install it.
 
 ```bash
+curl -fsSL agents.railway.com | sh # Install CLI and configure detected agents
 bash <(curl -fsSL https://railway.com/install.sh) --agents -y # Install CLI and configure detected agents
 bash <(curl -fsSL https://railway.com/install.sh) # Shell script (macOS, Linux, Windows via WSL)
 npm i -g @railway/cli # npm (macOS, Linux, Windows). Requires Node.js version 16 or higher.
@@ -255,7 +256,9 @@ railway add --database <type> --json                     # add one database; ALW
 railway add --service <name> --json                      # add empty service; ALWAYS pass --json
 railway variable list --service <svc> --json             # list variables
 railway variable set KEY=value --service <svc>           # set a variable
+railway domain list --service <svc> --json               # domains and DNS status
 railway logs --service <svc> --lines 200 --json          # recent logs
+railway logs --service <svc> --network --lines 200 --json # network flow snapshot
 railway metrics --service <svc> --since 1h --json        # resource and HTTP metrics summary
 railway up --detach -m "<summary>"                       # deploy current directory (returns at QUEUED — verify before reporting)
 railway deployment list --json                           # poll newest deployment status after a detached up
@@ -274,6 +277,7 @@ For anything beyond quick operations, load the reference that matches the user's
 | Create or connect resources | [setup.md](references/setup.md) | Projects, services, databases, buckets, templates, workspaces |
 | Ship code or manage releases | [deploy.md](references/deploy.md) | Deploy, redeploy, restart, build config, monorepo, Dockerfile |
 | Change configuration | [configure.md](references/configure.md) | Environments, variables, config patches, domains, networking |
+| Define or import project configuration as code ("IaC", "infrastructure as code", ".railway/railway.ts", "config plan/apply/pull") | [iac.md](references/iac.md) | Project-level Railway configuration files, import, plan, apply, drift checks, destructive apply safety |
 | Check health or debug failures | [operate.md](references/operate.md) | Status, logs, metrics, build/runtime triage, recovery |
 | Use a sandbox or build remotely ("sandbox", "scratch environment", "ephemeral box", "build remotely", "remote build", "run this remotely", "checkpoint", "snapshot/save/restore sandbox state") | [sandbox.md](references/sandbox.md) | Create/fork sandboxes, run commands remotely, remote template builds, checkpoints (save/restore sandbox state), port forwarding, teardown. Requires Sandboxes enabled in Priority Boarding — if unavailable, prompt the user to enable it. |
 | Request from API, docs, or community | [request.md](references/request.md) | Railway GraphQL API queries/mutations, metrics queries, Central Station, official docs |
@@ -289,7 +293,7 @@ If the request spans two areas (for example, "deploy and then check if it's heal
 5. Resolve context before mutation. Know which project, environment, and service you're acting on.
 6. For destructive actions (delete service, remove deployment, drop database), confirm intent and state impact before executing.
 7. After mutations, verify the result with a read-back command or MCP read.
-8. **Never report a deploy as successful without observing a terminal SUCCESS.** `railway up --detach` returning (it prints "Build queued") and a streaming `railway up` cut off by a shell timeout only confirm the build *started*. Poll `railway deployment list --json` until the newest deployment's `status` is `SUCCESS` (report deployed), or `FAILED`/`CRASHED` (triage per [operate.md](references/operate.md) — do not claim success). A streaming `up` that exits on its own is authoritative: exit 0 = deployed, exit 1 = failed.
+8. **Never report a deploy as successful without observing a terminal SUCCESS.** `railway up --detach` returning (it prints "Build queued") and a streaming `railway up` cut off by a shell timeout only confirm the build *started*. Poll `railway deployment list --json` with the same `--project`, `--environment`, and `--service` scope used for the deploy until the newest deployment's `status` is `SUCCESS` (report deployed). If status is `FAILED` or `CRASHED`, triage per [operate.md](references/operate.md). If status is `NEEDS_APPROVAL`, `SLEEPING`, `SKIPPED`, `REMOVED`, `REMOVING`, or an unknown value, report the exact state and next action; do not claim success. A streaming `up` that exits on its own is authoritative: exit 0 = deployed, exit 1 = failed.
 
 ## User-only commands (NEVER execute directly)
 

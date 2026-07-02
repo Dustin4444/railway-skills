@@ -128,6 +128,20 @@ Service names in variable references are case-sensitive and must match exactly. 
 
 When creating new service instances via JSON config patches, include `isCreated: true` in the service block to mark it as a new service.
 
+### Connect to a database shell
+
+Use `railway connect` when the user wants an interactive database shell (`psql`, `redis-cli`, `mysql`, or `mongosh`):
+
+```bash
+railway connect <database-service>
+railway connect <database-service> --environment production
+railway connect <database-service> --project <project-id> --environment production
+railway connect <database-service> --ssh
+railway connect <database-service> --no-ssh
+```
+
+The local database client must be installed. By default, `connect` uses a public TCP proxy when one exists and falls back to an SSH tunnel when no public proxy URL is available. Use `--ssh` to force the tunnel path, or `--no-ssh` to require a public TCP proxy.
+
 ### Delete a service
 
 Deleting a service removes it from the target environment. Confirm with the user before running it.
@@ -141,11 +155,12 @@ If 2FA is enabled and the command runs non-interactively, pass `--2fa-code <code
 
 ### Deploy from a template
 
-Templates provision pre-configured services with sensible defaults, faster than creating an empty service and configuring it manually:
+Templates provision pre-configured services with sensible defaults, faster than creating an empty service and configuring it manually. Use `templates search` for marketplace discovery and `deploy --template` for deployment:
 
 ```bash
 railway templates search postgres --verified true --json
-railway templates search --category database --limit 10 --json
+railway templates search --category Storage --limit 10 --json
+railway templates search postgres --limit 50 --after <cursor> --json
 railway deploy --template <template-code>
 ```
 
@@ -157,6 +172,20 @@ Template deployments typically create:
 - Environment variables (connection strings, secrets)
 - A volume for persistent data (databases)
 - A TCP proxy for external access (where applicable)
+
+Manage owned templates with:
+
+```bash
+railway templates list --json
+railway templates list --workspace <workspace> --json
+railway templates create --project <project> --environment production --json
+railway templates publish <template-id> --category Other --description "Deploy and Host My App with Railway" --readme-file README.md --json
+railway templates update <template-id> --category Other --description "Updated description" --readme-file README.md --json
+railway templates unpublish <template-id-or-code> --yes --json
+railway templates delete <template-id-or-code> --yes --json
+```
+
+Non-interactive `unpublish` and `delete` require `--yes`; pass `--2fa-code` when required by the current auth session.
 
 ### Bootstrap source for an empty service
 
@@ -325,10 +354,11 @@ When creating projects, Railway uses the default workspace unless `--workspace` 
 - **Not authenticated**: `railway login`
 - **Project not found**: verify with `railway project list --json`, check workspace context
 - **Service not found**: `railway service list --json` to list services in the current environment
+- **Database shell cannot connect**: install the local database client, use `railway connect <service> --ssh`, or create/check a TCP proxy
 - **Wrong workspace**: inspect `railway whoami --json`, re-run with explicit `--workspace`
 - **Permission denied**: check workspace role, mutations require member or admin access
 
 ## Validated against
 
-- Docs: [cli.md](https://docs.railway.com/cli), [init.md](https://docs.railway.com/cli/init), [add.md](https://docs.railway.com/cli/add), [link.md](https://docs.railway.com/cli/link), [project.md](https://docs.railway.com/cli/project), [service.md](https://docs.railway.com/cli/service), [templates.md](https://docs.railway.com/cli/templates), [list.md](https://docs.railway.com/cli/list), [whoami.md](https://docs.railway.com/cli/whoami)
-- CLI source: [init.rs](https://github.com/railwayapp/cli/blob/v4.58.0/src/commands/init.rs), [add.rs](https://github.com/railwayapp/cli/blob/v4.58.0/src/commands/add.rs), [project.rs](https://github.com/railwayapp/cli/blob/v4.58.0/src/commands/project.rs), [service.rs](https://github.com/railwayapp/cli/blob/v4.58.0/src/commands/service.rs), [templates.rs](https://github.com/railwayapp/cli/blob/v4.58.0/src/commands/templates.rs), [list.rs](https://github.com/railwayapp/cli/blob/v4.58.0/src/commands/list.rs), [bucket.rs](https://github.com/railwayapp/cli/blob/v4.58.0/src/commands/bucket.rs)
+- Docs: [cli.md](https://docs.railway.com/cli), [init.md](https://docs.railway.com/cli/init), [add.md](https://docs.railway.com/cli/add), [link.md](https://docs.railway.com/cli/link), [project.md](https://docs.railway.com/cli/project), [service.md](https://docs.railway.com/cli/service), [connect.md](https://docs.railway.com/cli/connect), [templates.md](https://docs.railway.com/cli/templates), [list.md](https://docs.railway.com/cli/list), [whoami.md](https://docs.railway.com/cli/whoami)
+- CLI source: [init.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/init.rs), [add.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/add.rs), [project.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/project.rs), [service.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/service.rs), [connect.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/connect.rs), [templates.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/templates.rs), [list.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/list.rs), [bucket.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/bucket.rs)

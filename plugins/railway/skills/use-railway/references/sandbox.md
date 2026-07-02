@@ -73,6 +73,10 @@ railway sandbox exec -- npm start
 
 Template recipes are stored locally by this CLI — `Unknown template` means it was built elsewhere or never built; rebuild it with the command the error message prints. For state that must be reachable from other machines or later sessions, capture a [checkpoint](#checkpoints--save-and-restore-sandbox-state) instead.
 
+## Agents in sandboxes
+
+Use sandboxes for agent runs that need isolated compute, private networking to Railway resources, or remote build/test execution. Copy or generate code in the sandbox, run the agent or test command with `sandbox exec`, and capture a checkpoint if the state should be reused across machines. Prefer `--private-network` when the agent needs internal service or database access.
+
 ### Inspect templates
 
 ```bash
@@ -159,5 +163,5 @@ Destroy sandboxes you created for a task once the task is done — idle timeout 
 
 ## Validated against
 
-- Docs: [sandboxes.md](https://docs.railway.com/sandboxes), [sandbox.md](https://docs.railway.com/cli/sandbox)
-- CLI source: [sandbox.rs](https://github.com/railwayapp/cli/blob/v5.12.0/src/commands/sandbox.rs), [sandbox_exec.rs](https://github.com/railwayapp/cli/blob/v5.12.0/src/controllers/sandbox_exec.rs)
+- Docs: [sandboxes.md](https://docs.railway.com/sandboxes), [sandbox.md](https://docs.railway.com/cli/sandbox), [agents-in-sandboxes.md](https://docs.railway.com/guides/agents-in-sandboxes)
+- CLI source: [sandbox.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/sandbox.rs), [sandbox_exec.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/controllers/sandbox_exec.rs)

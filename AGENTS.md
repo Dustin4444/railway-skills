@@ -34,6 +34,7 @@ References:
 | Create or connect resources | `references/setup.md` | Projects, services, databases, buckets, templates, workspaces |
 | Ship code or manage releases | `references/deploy.md` | Deploy, redeploy, restart, build config, monorepo, Dockerfile |
 | Change configuration | `references/configure.md` | Environments, variables, config patches, domains, networking |
+| Define or import project configuration as code | `references/iac.md` | Railway IaC, `.railway/railway.ts`, config init/pull/plan/apply, drift checks |
 | Check health or debug failures | `references/operate.md` | Status, logs, metrics, build/runtime triage, recovery |
 | Use a sandbox or build remotely | `references/sandbox.md` | Sandboxes: create/fork, remote exec, remote template builds, checkpoints, port forwarding (requires Priority Boarding) |
 | Analyze databases | `references/analyze-db.md` | Database introspection and performance analysis, then DB-specific refs |
@@ -94,7 +95,7 @@ API docs: https://docs.railway.com/api/llms-docs.md
 When editing this plugin:
 
 - Keep `SKILL.md` focused on routing, preflight, composition, and common operations.
-- Keep references organized by information type (setup, deploy, configure, operate, api).
+- Keep references organized by information type (setup, deploy, configure, iac, operate, api).
 - Keep references action-oriented with reasoning. Explain why, not only what.
 - Keep CLI behavior claims aligned with Railway docs and CLI source.
 - Keep a single "Validated against" block at the end of each reference.
