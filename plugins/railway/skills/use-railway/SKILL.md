@@ -35,13 +35,15 @@ Most CLI commands operate on the linked project/environment/service context. Use
 
 Railway has three agent-facing operation paths. Choose the path that matches the job:
 
-- **Remote MCP** (`https://mcp.railway.com`): default plugin MCP path for account/project/service discovery, deployment state, bounded logs, simple redeploys, simple project creation, or complex Railway workflows that can be handed to `railway-agent`. Remote MCP uses Railway OAuth and does not depend on local CLI state.
-- **Local CLI MCP** (`railway mcp`): optional user-installed MCP path for CLI-backed platform operations such as variables, domains, service config, templates, metrics, HTTP summaries, buckets, volumes, docs, or deploy-from-directory.
 - **Railway CLI** (`railway`): workflows that depend on local machine state such as current working directory deploys, `railway up`, `railway run`, SSH, database analysis scripts, local linking, interactive setup, or exact command output.
+- **Remote MCP** (`https://mcp.railway.com`): default plugin MCP path for account/project/service discovery, deployment state, bounded logs, simple redeploys, simple project creation, or complex Railway workflows that can be handed to `railway-agent`. Remote MCP uses Railway OAuth and does not depend on local CLI state.
+- **GraphQL**: operations that neither MCP nor CLI exposes, or when a reference gives a specific GraphQL fallback.
 
-If multiple paths are available, choose the one that preserves the needed context. Remote MCP fits OAuth-scoped platform operations that do not need local files or CLI state. The CLI fits workflows that need the current repo, local credentials, SSH, database scripts, or commands not exposed by remote MCP. Use Local CLI MCP only when the current agent has it explicitly configured.
+If multiple paths are available, choose the one that preserves the needed context. The CLI fits workflows that need the current repo, local credentials, SSH, database scripts, or exact command output. Remote MCP fits OAuth-scoped platform operations that do not need local files or CLI state.
 
-Use `scripts/railway-api.sh` only when neither MCP nor CLI exposes the operation, or when a reference gives a specific GraphQL fallback.
+Optional: if the current agent already has a user-installed local CLI MCP (`railway mcp`) configured, it can be used for CLI-backed platform operations not yet exposed by remote MCP. Published plugin configs do not install or launch local CLI MCP.
+
+Use `scripts/railway-api.sh` for GraphQL only when neither MCP nor CLI exposes the operation, or when a reference gives a specific GraphQL fallback.
 
 ## Parsing Railway URLs
 
@@ -286,14 +288,15 @@ If the request spans two areas (for example, "deploy and then check if it's heal
 
 ## Execution rules
 
-1. Use Railway MCP for platform operations that match an available MCP tool.
-2. Use the local CLI for workflows that need the current repo, local shell, SSH, database scripts, or unsupported MCP coverage.
-3. Fall back to `scripts/railway-api.sh` for operations neither MCP nor CLI exposes.
-4. Use `--json` output where available for reliable parsing.
-5. Resolve context before mutation. Know which project, environment, and service you're acting on.
-6. For destructive actions (delete service, remove deployment, drop database), confirm intent and state impact before executing.
-7. After mutations, verify the result with a read-back command or MCP read.
-8. **Never report a deploy as successful without observing a terminal SUCCESS.** `railway up --detach` returning (it prints "Build queued") and a streaming `railway up` cut off by a shell timeout only confirm the build *started*. Poll `railway deployment list --json` with the same `--project`, `--environment`, and `--service` scope used for the deploy until the newest deployment's `status` is `SUCCESS` (report deployed). If status is `FAILED` or `CRASHED`, triage per [operate.md](references/operate.md). If status is `NEEDS_APPROVAL`, `SLEEPING`, `SKIPPED`, `REMOVED`, `REMOVING`, or an unknown value, report the exact state and next action; do not claim success. A streaming `up` that exits on its own is authoritative: exit 0 = deployed, exit 1 = failed.
+1. Use Railway CLI for workflows that need the current repo, local shell, SSH, database scripts, local Railway context, or exact command output.
+2. Use Remote MCP for OAuth-scoped platform operations that match an available MCP tool and do not need local files or CLI state.
+3. Use local CLI MCP only when the current agent already has it explicitly configured and it exposes a needed operation not available through Remote MCP.
+4. Fall back to `scripts/railway-api.sh` for operations neither MCP nor CLI exposes.
+5. Use `--json` output where available for reliable parsing.
+6. Resolve context before mutation. Know which project, environment, and service you're acting on.
+7. For destructive actions (delete service, remove deployment, drop database), confirm intent and state impact before executing.
+8. After mutations, verify the result with a read-back command or MCP read.
+9. **Never report a deploy as successful without observing a terminal SUCCESS.** `railway up --detach` returning (it prints "Build queued") and a streaming `railway up` cut off by a shell timeout only confirm the build *started*. Poll `railway deployment list --json` with the same `--project`, `--environment`, and `--service` scope used for the deploy until the newest deployment's `status` is `SUCCESS` (report deployed). If status is `FAILED` or `CRASHED`, triage per [operate.md](references/operate.md). If status is `NEEDS_APPROVAL`, `SLEEPING`, `SKIPPED`, `REMOVED`, `REMOVING`, or an unknown value, report the exact state and next action; do not claim success. A streaming `up` that exits on its own is authoritative: exit 0 = deployed, exit 1 = failed.
 
 ## User-only commands (NEVER execute directly)
 
