@@ -40,7 +40,6 @@ Use stdin for secrets or values that shouldn't appear in shell history:
 
 ```bash
 printf "%s" "$SECRET_VALUE" | railway variable set API_KEY --stdin --service <service>
-railway variable set FEATURE_FLAG=true --service <service> --skip-deploys
 railway variable set API_URL=https://api.example.com --project <project-id> --environment <env> --service <service>
 ```
 
