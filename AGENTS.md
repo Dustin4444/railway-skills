@@ -35,7 +35,7 @@ References:
 | Ship code or manage releases | `references/deploy.md` | Deploy, redeploy, restart, build config, monorepo, Dockerfile |
 | Change configuration | `references/configure.md` | Environments, variables, config patches, domains, networking |
 | Manage feature flags | `references/feature-flags.md` | MCP list/get/set/delete; dashboard for rules; SDK runtime reads |
-| Define or import project configuration as code | `references/iac.md` | Railway IaC, `.railway/railway.ts`, config init/pull/plan/apply, drift checks |
+| Define configuration in source control | `references/iac.md` | TypeScript IaC selection, `.railway/railway.ts`, `railway.json` fallback, config init/pull/plan/apply, drift checks |
 | Check health or debug failures | `references/operate.md` | Status, logs, metrics, build/runtime triage, recovery |
 | Use a sandbox or build remotely | `references/sandbox.md` | Sandboxes: create/fork, remote exec, remote template builds, checkpoints, port forwarding (requires Priority Boarding) |
 | Analyze databases | `references/analyze-db.md` | Database introspection and performance analysis, then DB-specific refs |
