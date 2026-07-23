@@ -66,8 +66,14 @@ Add this GitHub repository as a Codex marketplace:
 
 ### Cursor
 
-There is not currently an official public Cursor listing for Railway. Add this
-GitHub repository from Cursor settings:
+Install from the official [Cursor Marketplace](https://cursor.com/marketplace/railway):
+
+```text
+/add-plugin railway
+```
+
+To install the version published by this repository directly instead, add it
+as a plugin source from Cursor settings:
 
 1. Open **Settings**.
 2. Select **Plugins**.
