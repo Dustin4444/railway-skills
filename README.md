@@ -8,26 +8,26 @@ Claude Code, Grok Build, and Cursor. Each plugin package includes the
 available as a connector for Claude.
 
 
-## Railway agent setup (Installing Agent Skills and local MCP)
+## Railway agent setup
 
-To configure Railway agent support through the Railway CLI, run:
+To install Railway agent support with Railway's hosted MCP server, run:
 
 ```bash
-curl -fsSL agents.railway.com | sh
+curl -fsSL agents.railway.com | sh -s -- --remote
 ```
 
-This installs Railway skills, configures the Railway MCP server where
-supported, and checks Railway authentication for detected tools. If you are not
+This installs the Railway CLI and skills, configures `https://mcp.railway.com`
+for detected tools, and checks Railway authentication. If you are not
 authenticated, run:
 
 ```bash
 railway login
 ```
 
-You can also install the Railway CLI and configure agent support in one step:
+If the Railway CLI is already installed, configure agent support directly:
 
 ```bash
-bash <(curl -fsSL https://railway.com/install.sh) --agents -y
+railway setup agent --remote
 ```
 
 ## Installing Railway integrations
@@ -57,7 +57,7 @@ repository as a Codex marketplace:
 Add the official [Railway connector for
 Claude](https://claude.ai/directory/connectors/railway) from Claude's connector
 directory. The connector uses Railway's hosted MCP server and OAuth, so it
-doesn't require a local Railway CLI installation.
+doesn't require the Railway CLI.
 
 For terminal-based workflows with Railway's agent skill and hooks, install the
 Claude Code plugin.
