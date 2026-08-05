@@ -12,6 +12,7 @@ input=$(cat)
 
 tool_name=$(echo "$input" | jq -r '.tool_name // empty')
 command=$(echo "$input" | jq -r '.tool_input.command // empty')
+cwd=$(echo "$input" | jq -r '.cwd // empty')
 
 if [[ "$tool_name" != "Bash" ]]; then
   exit 0
@@ -93,15 +94,47 @@ case "$skeleton" in
   *';'* | *'|'* | *'&'* | *'<'* | *'>'* | *'#'* | *'('* | *')'* | *'{'* | *'}'* | *$'\n'*) exit 0 ;;
 esac
 
-# Optional skill telemetry env prefixes, then the executable must BE the trusted
-# program — railway-api.sh (optionally path-qualified) or the railway CLI.
-env_prefix="^[[:space:]]*((RAILWAY_CALLER|RAILWAY_AGENT_SESSION|RAILWAY_SKILL_VERSION)=[^[:space:]]+[[:space:]]+)*"
+# Drop the optional skill telemetry env prefixes to reach the executable itself.
+env_assignment="^[[:space:]]*(RAILWAY_CALLER|RAILWAY_AGENT_SESSION|RAILWAY_SKILL_VERSION)=[^[:space:]]+[[:space:]]+(.*)$"
+remainder=$skeleton
+while [[ "$remainder" =~ $env_assignment ]]; do
+  remainder=${BASH_REMATCH[2]}
+done
+remainder=${remainder#"${remainder%%[![:space:]]*}"}
+executable=${remainder%%[[:space:]]*}
 
-if [[ "$skeleton" =~ ${env_prefix}([^[:space:]]*/)?railway-api\.sh([[:space:]]|$) ]]; then
-  approve "Railway API call auto-approved"
+# Resolve a path the way the command would, so the comparison below is about the
+# file that will run rather than the spelling used to reach it. Symlinks and `..`
+# in the directory part collapse; a directory that doesn't exist fails outright.
+canonical_path() {
+  local path=$1 dir
+  if [[ "$path" != /* ]]; then
+    [[ -n "$cwd" ]] || return 1
+    path="$cwd/$path"
+  fi
+  dir=$(cd "$(dirname "$path")" 2>/dev/null && pwd -P) || return 1
+  printf '%s/%s' "$dir" "$(basename "$path")"
+}
+
+# The helper this hook vouches for is the one shipped beside it, so locate it
+# from the hook's own path rather than trusting the name in the command. A file
+# is only that helper if it resolves to the same path; the name alone says
+# nothing about which file it is, and anything a repo or temp directory can
+# supply is not this plugin's script.
+if [[ "$executable" == *railway-api.sh ]]; then
+  hook_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd -P) || exit 0
+  helper=$(canonical_path "$hook_dir/../skills/use-railway/scripts/railway-api.sh") || exit 0
+  [[ -f "$helper" ]] || exit 0
+  invoked=$(canonical_path "$executable") || exit 0
+  if [[ "$invoked" == "$helper" ]]; then
+    approve "Railway API call auto-approved"
+  fi
+  exit 0
 fi
 
-if [[ "$skeleton" =~ ${env_prefix}railway([[:space:]]|$) ]]; then
+# The railway CLI is resolved from PATH by name, so require exactly that name —
+# a path-qualified `railway` is some other file and gets the normal prompt.
+if [[ "$executable" == "railway" ]]; then
   approve "Railway CLI command auto-approved"
 fi
 
