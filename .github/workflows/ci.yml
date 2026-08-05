@@ -71,9 +71,21 @@ jobs:
               echo "$plugin declares ${#versions[@]} versions: ${versions[*]}"
               printf '  %s\n' "${manifests[@]}"
               status=1
-            else
-              echo "$plugin ${versions[0]} (${#manifests[@]} manifests)"
+              continue
             fi
+            echo "$plugin ${versions[0]} (${#manifests[@]} manifests)"
+
+            # Skills stamp the plugin version into their RAILWAY_CALLER telemetry, so
+            # a bump that misses them reports a version that is no longer shipping.
+            while read -r stamped; do
+              [[ -z "$stamped" ]] && continue
+              file=${stamped%%:*}
+              found=${stamped##*@}
+              if [[ "$found" != "${versions[0]}" ]]; then
+                echo "  $file stamps @$found but the plugin is ${versions[0]}"
+                status=1
+              fi
+            done < <(grep -rnoE 'skill:[a-z0-9-]+@[0-9]+\.[0-9]+\.[0-9]+' "$plugin" || true)
           done
           exit "$status"
 
