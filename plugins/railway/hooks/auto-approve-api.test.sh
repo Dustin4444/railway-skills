@@ -1,4 +1,8 @@
 #!/bin/bash
+# The payloads below are shell source held as data, so the metacharacters and
+# backslashes in them are deliberately literal and must not be rewritten.
+# shellcheck disable=SC1003,SC2016
+#
 # Regression tests for auto-approve-api.sh. Run: bash auto-approve-api.test.sh
 #
 # The hook's invariant is that it never returns "allow" for a command bash would

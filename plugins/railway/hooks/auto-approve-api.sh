@@ -34,7 +34,7 @@ EOF
 # raw command for them before stripping anything. Legit GraphQL uses `$var`, not
 # `$(`, backticks, or `${`.
 case "$command" in
-  *'$('* | *'`'* | *'${'*) exit 0 ;;
+  *\$\(* | *\`* | *\$\{*) exit 0 ;;
 esac
 
 # Build the shell skeleton by dropping everything bash treats as literal data —
@@ -53,7 +53,7 @@ while ((i < len)); do
   case "$state" in
     unquoted)
       case "$char" in
-        '\')
+        \\)
           # Escapes whatever follows, so that character is data rather than
           # structure — and `\<newline>` is a line continuation. A backslash with
           # nothing after it doesn't parse; don't approve what we can't read.
@@ -71,7 +71,7 @@ while ((i < len)); do
       ;;
     double)
       case "$char" in
-        '\')
+        \\)
           ((i + 1 < len)) || exit 0
           ((i++))
           ;;

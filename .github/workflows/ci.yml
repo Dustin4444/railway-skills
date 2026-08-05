@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Shell tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run every *.test.sh
+        run: |
+          set -euo pipefail
+          mapfile -t suites < <(find . -name '*.test.sh' -not -path './.git/*' | sort)
+          if [[ "${#suites[@]}" -eq 0 ]]; then
+            echo "No *.test.sh found — a suite was renamed or removed, so this job would pass without testing anything."
+            exit 1
+          fi
+          for suite in "${suites[@]}"; do
+            echo "::group::$suite"
+            bash "$suite"
+            echo "::endgroup::"
+          done
+
+  shellcheck:
+    name: Shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint every *.sh
+        run: |
+          set -euo pipefail
+          mapfile -t scripts < <(find . -name '*.sh' -not -path './.git/*' | sort)
+          if [[ "${#scripts[@]}" -eq 0 ]]; then
+            echo "No *.sh found."
+            exit 1
+          fi
+          printf 'checking %s\n' "${scripts[@]}"
+          shellcheck "${scripts[@]}"
+
+  manifests:
+    name: Manifests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Every *.json parses
+        run: |
+          set -euo pipefail
+          mapfile -t files < <(find . -name '*.json' -not -path './.git/*' | sort)
+          for file in "${files[@]}"; do
+            jq -e . "$file" >/dev/null || { echo "invalid JSON: $file"; exit 1; }
+          done
+          echo "${#files[@]} JSON files parse"
+      - name: Each plugin declares one version across its host manifests
+        run: |
+          set -euo pipefail
+          # A plugin ships a manifest per host (.claude-plugin, .grok-plugin, …) and
+          # they all describe the same release, so their versions have to agree.
+          status=0
+          for plugin in plugins/*/; do
+            mapfile -t manifests < <(find "$plugin" -path '*/.*-plugin/plugin.json' | sort)
+            [[ "${#manifests[@]}" -eq 0 ]] && continue
+            mapfile -t versions < <(jq -r '.version' "${manifests[@]}" | sort -u)
+            if [[ "${#versions[@]}" -ne 1 ]]; then
+              echo "$plugin declares ${#versions[@]} versions: ${versions[*]}"
+              printf '  %s\n' "${manifests[@]}"
+              status=1
+            else
+              echo "$plugin ${versions[0]} (${#manifests[@]} manifests)"
+            fi
+          done
+          exit "$status"
+
+  python:
+    name: Python syntax
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Every *.py compiles
+        run: |
+          set -euo pipefail
+          mapfile -t scripts < <(find . -name '*.py' -not -path './.git/*' | sort)
+          if [[ "${#scripts[@]}" -eq 0 ]]; then
+            echo "No *.py found."
+            exit 1
+          fi
+          python -m py_compile "${scripts[@]}"
+          echo "${#scripts[@]} Python files compile"
