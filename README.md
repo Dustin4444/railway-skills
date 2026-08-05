@@ -10,15 +10,15 @@ available as a connector for Claude.
 
 ## Railway agent setup
 
-To install Railway agent support with Railway's hosted MCP server, run:
+To install the Railway CLI and configure agent support, run:
 
 ```bash
-curl -fsSL agents.railway.com | sh -s -- --remote
+curl -fsSL agents.railway.com | sh
 ```
 
-This installs the Railway CLI and skills, configures `https://mcp.railway.com`
-for detected tools, and checks Railway authentication. If you are not
-authenticated, run:
+This installs the Railway CLI and skills, configures the Railway MCP server for
+detected tools, and checks Railway authentication. If you are not authenticated,
+run:
 
 ```bash
 railway login
@@ -27,7 +27,7 @@ railway login
 If the Railway CLI is already installed, configure agent support directly:
 
 ```bash
-railway setup agent --remote
+railway setup agent
 ```
 
 ## Installing Railway integrations
@@ -64,13 +64,26 @@ Claude Code plugin.
 
 ### Claude Code
 
-Use the official Anthropic marketplace for published Claude Code releases:
+The official Anthropic marketplace is available in Claude Code by default.
+Install Railway and reload plugins:
 
 ```text
 /plugin install railway@claude-plugins-official
+/reload-plugins
 ```
 
-The official marketplace pins each plugin to a specific commit. Changes in this repository become available through `claude-plugins-official` after the Railway entry in `anthropics/claude-plugins-official` is updated to a commit that contains them.
+You can also run `/plugin` and select the **Discover** tab to browse the
+official marketplace. If Claude Code can't find Railway, refresh the marketplace
+and retry the installation:
+
+```text
+/plugin marketplace update claude-plugins-official
+```
+
+The official marketplace pins each plugin to a specific commit. Changes in this
+repository become available through `claude-plugins-official` after the Railway
+entry in `anthropics/claude-plugins-official` is updated to a commit that
+contains them.
 
 To install the version published by this repository's Claude Code marketplace,
 add the marketplace and install the `railway` plugin from it:
