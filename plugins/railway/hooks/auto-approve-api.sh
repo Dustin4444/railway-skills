@@ -37,20 +37,60 @@ case "$command" in
   *'$('* | *'`'* | *'${'*) exit 0 ;;
 esac
 
-# Build the shell skeleton: drop single- and double-quoted spans (the GraphQL
-# query and JSON args live there) so only the shell structure is left. -0777
-# slurps the whole command, so multi-line quoted args collapse away.
-skeleton=$(printf '%s' "$command" | perl -0777 -pe "s/'[^']*'//g; s/\"[^\"]*\"//g" 2>/dev/null)
-if [[ -z "$skeleton" && -n "$command" ]]; then
-  # perl unavailable or failed — can't vet the command, so don't auto-approve.
-  exit 0
-fi
+# Build the shell skeleton by dropping everything bash treats as literal data —
+# quoted spans and backslash-escaped characters — leaving only the characters
+# where bash's metacharacters actually operate. Tracking bash's quoting state
+# character by character is the whole point: `\"` is a literal to bash though it
+# looks like a delimiter, and a quote of one type inside a span of the other
+# closes nothing, so any reading that disagrees with bash on where a quoted span
+# begins and ends will hide a top-level `;` behind what it mistakes for data.
+skeleton=""
+state=unquoted
+i=0
+len=${#command}
+while ((i < len)); do
+  char=${command:i:1}
+  case "$state" in
+    unquoted)
+      case "$char" in
+        '\')
+          # Escapes whatever follows, so that character is data rather than
+          # structure — and `\<newline>` is a line continuation. A backslash with
+          # nothing after it doesn't parse; don't approve what we can't read.
+          ((i + 1 < len)) || exit 0
+          ((i++))
+          ;;
+        "'") state=single ;;
+        '"') state=double ;;
+        *) skeleton+="$char" ;;
+      esac
+      ;;
+    single)
+      # Backslash is not special inside single quotes: the span ends at the next `'`.
+      [[ "$char" == "'" ]] && state=unquoted
+      ;;
+    double)
+      case "$char" in
+        '\')
+          ((i + 1 < len)) || exit 0
+          ((i++))
+          ;;
+        '"') state=unquoted ;;
+      esac
+      ;;
+  esac
+  ((i++))
+done
+
+# An unterminated quote means the command does not parse the way we just read it.
+[[ "$state" == unquoted ]] || exit 0
 
 # On the skeleton every remaining metacharacter is top-level: command chaining
-# (`;` `|` `&`), redirection or heredoc (`<` `>`), comments (`#`), or a newline
-# joining two commands. Any of them means more than one simple command.
+# (`;` `|` `&`), redirection or heredoc (`<` `>`), comments (`#`), grouping or
+# subshells (`(` `)` `{` `}`), or a newline joining two commands. Any of them
+# means more than one simple command.
 case "$skeleton" in
-  *';'* | *'|'* | *'&'* | *'<'* | *'>'* | *'#'* | *$'\n'*) exit 0 ;;
+  *';'* | *'|'* | *'&'* | *'<'* | *'>'* | *'#'* | *'('* | *')'* | *'{'* | *'}'* | *$'\n'*) exit 0 ;;
 esac
 
 # Optional skill telemetry env prefixes, then the executable must BE the trusted
