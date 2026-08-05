@@ -2,7 +2,10 @@
 
 Agent skills for [Railway](https://railway.com), following the [Agent Skills](https://agentskills.io) format. 
 
-This repository also includes Railway plugin packaging for Claude Code, OpenAI Codex, Grok Build, and Cursor. The plugin includes Agent Skills and local MCP configuration.
+This repository also includes Railway plugin packaging for ChatGPT, OpenAI Codex,
+Claude Code, Grok Build, and Cursor. Each plugin package includes the
+`use-railway` Agent Skill and Railway's hosted MCP server. Railway is also
+available as a connector for Claude.
 
 
 ## Railway agent setup (Installing Agent Skills and local MCP)
@@ -27,7 +30,37 @@ You can also install the Railway CLI and configure agent support in one step:
 bash <(curl -fsSL https://railway.com/install.sh) --agents -y
 ```
 
-## Installing the Railway Plugin
+## Installing Railway integrations
+
+### ChatGPT and OpenAI Codex
+
+Install the official [Railway plugin for ChatGPT and
+Codex](https://chatgpt.com/plugins/plugin_asdk_app_6a502589384081919c5decf93496c9d1)
+from the shared plugin directory. The plugin includes the `use-railway` skill
+and Railway's hosted MCP server. Connect your Railway account when prompted,
+then start a new chat or task to use the plugin.
+
+To install the version published by this repository directly, add this GitHub
+repository as a Codex marketplace:
+
+1. Open Codex.
+2. Select **Plugins** in the sidebar.
+3. Open the **More** dropdown.
+4. Click **Add more**.
+5. Enter [`railwayapp/railway-skills`](https://github.com/railwayapp/railway-skills) as the marketplace source.
+
+- Plugin manifest: [`plugins/railway/.codex-plugin/plugin.json`](plugins/railway/.codex-plugin/plugin.json)
+- Marketplace: [`.agents/plugins/marketplace.json`](.agents/plugins/marketplace.json)
+
+### Claude
+
+Add the official [Railway connector for
+Claude](https://claude.ai/directory/connectors/railway) from Claude's connector
+directory. The connector uses Railway's hosted MCP server and OAuth, so it
+doesn't require a local Railway CLI installation.
+
+For terminal-based workflows with Railway's agent skill and hooks, install the
+Claude Code plugin.
 
 ### Claude Code
 
@@ -47,22 +80,6 @@ add the marketplace and install the `railway` plugin from it:
 /plugin install railway@railway-skills
 /reload-plugins
 ```
-
-### OpenAI Codex
-
-Codex support in this repository is packaged through the repo-local Codex marketplace manifest. The manifest makes the `railway` plugin available to
-Codex environments that load this repository's plugin marketplace:
-
-- Plugin manifest: [`plugins/railway/.codex-plugin/plugin.json`](plugins/railway/.codex-plugin/plugin.json)
-- Marketplace: [`.agents/plugins/marketplace.json`](.agents/plugins/marketplace.json)
-
-Add this GitHub repository as a Codex marketplace:
-
-1. Open Codex.
-2. Select **Plugins** in the sidebar.
-3. Open the **More** dropdown.
-4. Click **Add more**.
-5. Enter [`railwayapp/railway-skills`](https://github.com/railwayapp/railway-skills) as the marketplace source.
 
 ### Cursor
 
@@ -86,28 +103,18 @@ as a plugin source from Cursor settings:
 
 ### Grok Build
 
-Railway is packaged for Grok as the nested plugin at `plugins/railway`.
-Marketplace entries should point at that subpath with a pinned commit:
-
-```json
-{
-  "name": "railway",
-  "source": {
-    "source": "url",
-    "url": "https://github.com/railwayapp/railway-skills.git",
-    "sha": "<full commit sha>",
-    "path": "plugins/railway"
-  }
-}
-```
-
-After the Railway entry is available in a Grok marketplace, install it from Grok's TUI:
+Railway is published in the [official xAI plugin
+marketplace](https://github.com/xai-org/plugin-marketplace). Install it from
+Grok's TUI:
 
 1. Run `grok`.
 2. Open the extensions modal with `/plugins`.
 3. Go to the **Marketplace** tab.
 4. Select `railway` from the marketplace.
 5. Press `i` to install.
+
+The official marketplace entry resolves the nested plugin at `plugins/railway`
+from this repository and pins it to a specific commit.
 
 ## Skill surface
 
