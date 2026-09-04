@@ -4,7 +4,7 @@ Use Infrastructure as Code for project configuration. Keep one authoring file an
 
 ## Choose the model
 
-TypeScript IaC is generally available. Python and Go authoring are in beta. Preserve an existing `.railway/railway.ts`, `.railway/railway.py`, or `.railway/railway.go`; do not switch languages based on the app's `package.json`, `go.mod`, or framework. With no existing authoring file, `config init` and `config pull` default to TypeScript even for non-TypeScript apps. Honor an explicit Python/Go preference using the matching SDK and one authoring file.
+TypeScript IaC is generally available. Python and Go authoring are in beta. Preserve an existing `.railway/railway.ts`, `.railway/railway.py`, or `.railway/railway.go`; do not switch languages based on the app's `package.json`, `go.mod`, or framework. With no existing authoring file, `config init` and `config pull` default to TypeScript even for non-TypeScript apps. `config init` and `config pull` have no language flag: the CLI picks the language only from an existing authoring file. To honor an explicit Python/Go preference on a fresh project, create an empty `.railway/railway.py` or `.railway/railway.go` first, then run `config pull` so the import is emitted in that language. `config migrate --lang py|go` emits Python/Go only when translating legacy `railway.json`/`railway.toml`.
 
 `railway.json` and `railway.toml` are deprecated. New services cannot opt into Config as Code; existing files stop being read on **2026-12-01**. Do not create them as a fallback. For an existing legacy service, use the migration workflow below; if the user requests a temporary legacy edit, explain the cutoff and keep its current format.
 
@@ -238,9 +238,9 @@ Before completing the migration:
 - Run `railway config plan`; inspect unexpected removals or changes, then apply only within the user's authorized scope.
 - Check for remaining legacy files and custom Railway Config File paths so deployments do not retain dual ownership.
 
-For a requested temporary edit to an existing legacy service, retain its format, validate against the [Config as Code reference](https://docs.railway.com/reference/config-as-code), and explain the 2026-12-01 cutoff. Config as Code has deployment-time precedence over dashboard settings; a deployment is needed for edits to take effect. Keep variables and secrets in Railway variables.
+For a requested temporary edit to an existing legacy service, retain its format, validate against the [Config as Code reference](https://docs.railway.com/config-as-code/reference), and explain the 2026-12-01 cutoff. Config as Code has deployment-time precedence over dashboard settings; a deployment is needed for edits to take effect. Keep variables and secrets in Railway variables.
 
 ## Validated against
 
-- Docs: [Infrastructure as Code](https://docs.railway.com/infrastructure-as-code), [IaC reference](https://docs.railway.com/infrastructure-as-code/reference), [Config as Code](https://docs.railway.com/guides/config-as-code)
+- Docs: [Infrastructure as Code](https://docs.railway.com/infrastructure-as-code), [IaC reference](https://docs.railway.com/infrastructure-as-code/reference), [Config as Code](https://docs.railway.com/config-as-code)
 - CLI source (v5.49.1): [config/mod.rs](https://github.com/railwayapp/cli/blob/v5.49.1/src/commands/config/mod.rs), [config/migrate.rs](https://github.com/railwayapp/cli/blob/v5.49.1/src/commands/config/migrate.rs), [authoring.rs](https://github.com/railwayapp/cli/blob/v5.49.1/src/commands/config/authoring.rs), [eval.rs](https://github.com/railwayapp/cli/blob/v5.49.1/src/iac/eval.rs), [saved_plan.rs](https://github.com/railwayapp/cli/blob/v5.49.1/src/iac/saved_plan.rs)

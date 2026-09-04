@@ -61,11 +61,11 @@ Types are inferred unless `--type bool|string|number|json` is given. `--force` p
 For API operations beyond these commands, inspect the public GraphQL API (`signals`, `signalCreate`, `signalDefaultSet`, `signalRuleSet`, `signalDelete`) using [request.md](request.md). Owners use `project:<projectId>` or `workspace:<workspaceId>`; access remains subject to the API's scope and permission checks.
 
 ```bash
-railway api --variables '{"owner":"project:<projectId>"}' <<'EOF'
-query projectSignals($owner: String!) {
-  signals(owner: $owner) { name type default rules version }
-}
-EOF
+railway api \
+  'query projectSignals($owner: String!) {
+    signals(owner: $owner) { name type default rules version }
+  }' \
+  --variables '{"owner":"project:<projectId>"}'
 ```
 
 ## Runtime SDK

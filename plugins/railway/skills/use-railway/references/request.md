@@ -99,7 +99,7 @@ railway api --file query.graphql --raw-var id=<resource-id> --var enabled=true
 
 `--var` parses JSON values when possible; `--raw-var` keeps strings. Queries can also come from stdin, with variables provided separately. Use `--operation-name` for documents containing multiple operations. Output is JSON by default; `--compact` changes formatting and there is no `--json` flag. HTTP errors and GraphQL `errors` fail the command; do not add `--allow-errors` when deciding whether a mutation succeeded. Query resource state before retrying an uncertain mutation.
 
-For an older CLI that cannot be upgraded, the bundled `scripts/railway-api.sh '<query>' '<variables-json>'` remains a compatibility fallback. It reads `user.token` from `~/.railway/config.json`; it does not implement the CLI's environment-token selection or OAuth refresh. It expects query first and variables second, not a query on stdin, and callers must inspect its response for GraphQL errors. Keep the skill telemetry prefix on `railway api` calls just like other CLI calls.
+For an older CLI that cannot be upgraded, the bundled `scripts/railway-api.sh '<query>' '<variables-json>'` remains a compatibility fallback. The database analysis scripts (`dal.py`, `analyze-postgres.py`) still call this helper directly, so it must stay in the plugin even when agents use `railway api`. It reads `user.token` from `~/.railway/config.json`; it does not implement the CLI's environment-token selection or OAuth refresh. It expects query first and variables second, not a query on stdin, and callers must inspect its response for GraphQL errors. Keep the skill telemetry prefix on `railway api` calls just like other CLI calls.
 
 For the full API schema, see: https://docs.railway.com/api/llms-docs.md
 

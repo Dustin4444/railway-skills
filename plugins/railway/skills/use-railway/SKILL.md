@@ -2,8 +2,8 @@
 name: use-railway
 description: >
   Operate Railway infrastructure: sign up for or sign in to a Railway account,
-  create projects, provision services and databases, manage object storage
-  buckets, deploy code, configure infrastructure as code, environments and variables, manage domains,
+  create projects, provision services, databases, and buckets, deploy code,
+  configure infrastructure as code, environments and variables, manage domains,
   troubleshoot failures, check status and metrics, manage feature flags,
   database recovery and HA, cloud agents, usage limits, and Railway agent tooling.
   Use this skill whenever

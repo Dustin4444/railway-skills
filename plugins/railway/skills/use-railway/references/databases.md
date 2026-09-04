@@ -10,7 +10,7 @@ Use native CLI commands for database recovery, high availability, and connection
 | MySQL | `railway mysql ha`, `history` |
 | Redis | `railway redis ha`, `history` |
 
-Postgres operations arrived in CLI 5.33; MySQL/Redis HA in 5.46. Use **5.47.2 or newer for HA mutations** to include the revert and scaling fixes. MySQL/Redis do not expose PITR or PgBouncer commands. Availability and image eligibility also depend on Railway's engine templates; a command existing does not make every custom database image eligible.
+Postgres operations arrived in CLI 5.33; MySQL/Redis HA in 5.46. Use **5.47.1 or newer for HA mutations**: that release added the revert and scaling fixes (staged member changes, never deleting the acting primary) and `--remove-orphans`. MySQL/Redis do not expose PITR or PgBouncer commands. Availability and image eligibility also depend on Railway's engine templates; a command existing does not make every custom database image eligible.
 
 All these command trees accept `--project`, `--environment`, `--service`, and `--json`. Resolve the database service and environment first, especially when the supplied URL points at a replica or proxy. Use explicit IDs for cross-project work:
 

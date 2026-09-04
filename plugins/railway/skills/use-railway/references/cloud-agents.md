@@ -24,9 +24,10 @@ railway ca create my-agent --project <project-id> --environment <env> --env-file
 railway ca ssh my-agent
 railway ca ssh my-agent -- bash
 railway ca start --codex --project <project-id> --environment <env>
+railway ca start --railway --project <project-id> --environment <env>
 ```
 
-Choose one creation command with the needed options. `create` provisions a VM without attaching; `ssh` connects to an existing VM and does not create one for a mistyped name. `start` can create and launch a harness, skipping the TUI. `--no-wait` on create/wake means requested, not ready: reread `ca list --json` before reporting readiness. Environment files and `--variable` inputs configure the agent VM; pass only values needed for the remote task.
+Choose one creation command with the needed options. `create` provisions a VM without attaching; `ssh` connects to an existing VM and does not create one for a mistyped name. `start` can create and launch a harness, skipping the TUI. Harness flags are `--codex`, `--claude`, `--grok`, and `--railway`; the first three carry or mint a local sign-in, while `--railway` launches Railway's own agent with credentials already on the VM and needs no local sign-in, which suits unattended workflows. `--no-wait` on create/wake means requested, not ready: reread `ca list --json` before reporting readiness. Environment files and `--variable` inputs configure the agent VM; pass only values needed for the remote task.
 
 For a human terminal, bare `railway ca` opens the management TUI and `railway code` opens a session-focused view. Automated workflows should use explicit lifecycle commands rather than attempting to control that TUI. `ca setup` configures the default harness and skills; `ca setup --show` inspects preferences and `ca setup --reset` removes them when requested. Launching can carry harness authentication and skills from the local machine, so choose the harness and remote target deliberately.
 

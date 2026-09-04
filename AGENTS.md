@@ -79,7 +79,7 @@ Use GraphQL for operations without a dedicated command or MCP tool. Prefer the C
 
 - Endpoint: `https://backboard.railway.com/graphql/v2`
 - CLI (5.28+): `railway api`, with `search`, `describe`, and `schema` for discovery.
-- Legacy helper: `plugins/railway/skills/use-railway/scripts/railway-api.sh`, retained for older CLI compatibility. It attaches `X-Railway-Skill-Id`, `X-Railway-Skill-Version`, and `X-Railway-Agent-Session` headers.
+- Legacy helper: `plugins/railway/skills/use-railway/scripts/railway-api.sh`, retained for older CLI compatibility and still required by the database analysis scripts (`dal.py`, `analyze-postgres.py`). It attaches `X-Railway-Skill-Id`, `X-Railway-Skill-Version`, and `X-Railway-Agent-Session` headers.
 
 ### API authentication
 
