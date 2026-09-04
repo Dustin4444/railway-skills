@@ -34,8 +34,11 @@ References:
 | Create or connect resources | `references/setup.md` | Projects, services, databases, buckets, templates, workspaces |
 | Ship code or manage releases | `references/deploy.md` | Deploy, redeploy, restart, build config, monorepo, Dockerfile |
 | Change configuration | `references/configure.md` | Environments, variables, config patches, domains, networking |
-| Manage feature flags | `references/feature-flags.md` | MCP list/get/set/delete; dashboard for rules; SDK runtime reads |
-| Define configuration in source control | `references/iac.md` | TypeScript IaC selection, `.railway/railway.ts`, `railway.json` fallback, config init/pull/plan/apply, drift checks |
+| Manage feature flags | `references/feature-flags.md` | MCP registry operations; CLI targeting rules and rollouts; SDK runtime reads |
+| Define configuration in source control | `references/iac.md` | TypeScript/Python/Go IaC, legacy migration, imports, saved plans, apply and drift checks |
+| Manage database features | `references/databases.md` | Postgres PITR, backups, HA and PgBouncer; MySQL/Redis HA |
+| Inspect costs or manage limits | `references/usage.md` | Workspace/project/service usage and workspace/agent spending limits |
+| Run coding agents on Railway | `references/cloud-agents.md` | Cloud agent lifecycle, harness launches, desktop SSH setup |
 | Check health or debug failures | `references/operate.md` | Status, logs, metrics, build/runtime triage, recovery |
 | Use a sandbox or build remotely | `references/sandbox.md` | Sandboxes: create/fork, remote exec, remote template builds, checkpoints, port forwarding (requires Priority Boarding) |
 | Analyze databases | `references/analyze-db.md` | Database introspection and performance analysis, then DB-specific refs |
@@ -49,9 +52,9 @@ Choose the Railway operation path that matches the job.
 
 - Railway CLI (`railway`): local-machine workflows such as current-directory deploys, `railway up`, `railway run`, SSH, database analysis scripts, local linking, interactive setup, and exact command output.
 - Remote MCP (`https://mcp.railway.com`): default plugin MCP path for account/project/service discovery, deployment status, feature flags, bounded logs, simple redeploys, simple project creation, and complex workflows through `railway-agent`. Remote MCP uses Railway OAuth and does not depend on local CLI state.
-- GraphQL: operations that neither MCP nor CLI exposes.
+- GraphQL through `railway api`: operations without a dedicated MCP tool or CLI command, with live schema search and inspection.
 
-Optional: if the current agent already has a user-installed local CLI MCP (`railway mcp`) configured, it can be used for CLI-backed platform operations not yet exposed by remote MCP. Published plugin configs do not install or launch local CLI MCP.
+Optional: an already configured in-process CLI MCP (`railway mcp local`) can supply operations not available through hosted MCP. Bare `railway mcp` starts the hosted proxy using CLI login; it is not the in-process server. Published plugin configs use direct hosted HTTP with editor OAuth.
 
 ### Railway CLI
 
@@ -68,27 +71,26 @@ Published plugin MCP configs use Railway's hosted MCP server for single-click se
 - Keep `plugins/railway/.mcp.json`, `plugins/railway/.cursor-plugin/mcp.json`, and `plugins/railway/.grok-plugin/mcp.json` in sync.
 - Plugin MCP configs must point at `https://mcp.railway.com` with HTTP transport.
 - Do not store credentials in plugin MCP config. Remote MCP authentication uses Railway OAuth.
-- Railway CLI still exposes `railway mcp` for users who explicitly install a local CLI-backed MCP server, but published plugin configs should not launch it.
+- CLI installation defaults to the hosted proxy (`railway mcp`, with `mcp proxy` retained as an alias). `railway mcp install --oauth` selects direct HTTP/editor OAuth; `--local` selects `railway mcp local`. `--remote` is an alias for the proxy default. Published plugin configs keep direct HTTP transport.
 
 ### GraphQL API
 
-Use GraphQL for operations the CLI doesn't expose.
+Use GraphQL for operations without a dedicated command or MCP tool. Prefer the CLI's authenticated API client.
 
 - Endpoint: `https://backboard.railway.com/graphql/v2`
-- API helper: `plugins/railway/skills/use-railway/scripts/railway-api.sh`
-- The API helper attaches `X-Railway-Skill-Id`, `X-Railway-Skill-Version`, and `X-Railway-Agent-Session` headers.
+- CLI (5.28+): `railway api`, with `search`, `describe`, and `schema` for discovery.
+- Legacy helper: `plugins/railway/skills/use-railway/scripts/railway-api.sh`, retained for older CLI compatibility and still required by the database analysis scripts (`dal.py`, `analyze-postgres.py`). It attaches `X-Railway-Skill-Id`, `X-Railway-Skill-Version`, and `X-Railway-Agent-Session` headers.
 
-### API token
+### API authentication
 
-Token location: `~/.railway/config.json` under `user.token`.
+`railway api` uses normal CLI authentication and token refresh. The legacy helper reads only `~/.railway/config.json` under `user.token`; it does not implement environment-token selection or OAuth refresh.
 
 Example:
 
 ```bash
-# From plugins/railway/skills/use-railway
-scripts/railway-api.sh \
+railway api \
   'query getEnv($id: String!) { environment(id: $id) { name } }' \
-  '{"id": "env-uuid"}'
+  --variables '{"id": "env-uuid"}'
 ```
 
 API docs: https://docs.railway.com/api/llms-docs.md
